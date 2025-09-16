@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVM Cost Forecasting Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .step-card {
+            background-color: #f8fafc; /* Tailwind gray-50 */
+            border-left: 4px solid #3b82f6; /* Tailwind blue-500 */
+        }
+        .result-value {
+            transition: color 0.3s ease-in-out;
+        }
+        /* Custom radio button styling */
+        .radio-label {
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        input[type="radio"]:checked + .radio-label {
+            background-color: #eff6ff; /* Tailwind blue-50 */
+            border-color: #3b82f6; /* Tailwind blue-500 */
+        }
+    </style>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-2xl bg-white rounded-2xl shadow-lg p-8 md:p-12 space-y-8">
+        
+        <!-- Header -->
+        <div>
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-800 text-center">EVM Cost Forecasting</h1>
+            <p id="method-subtitle" class="text-slate-500 text-center mt-2">Method 1: Trusting the Original Plan</p>
+        </div>
+
+        <!-- Method Selector -->
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <input type="radio" name="method" id="method1" value="method1" class="hidden" onchange="calculateEVM()" checked>
+                <label for="method1" class="radio-label block border border-slate-300 rounded-lg p-4 text-center cursor-pointer">
+                    <span class="font-semibold text-slate-700">Method 1</span>
+                    <span class="block text-xs text-slate-500">Trust the Plan</span>
+                </label>
+            </div>
+            <div>
+                <input type="radio" name="method" id="method2" value="method2" class="hidden" onchange="calculateEVM()">
+                <label for="method2" class="radio-label block border border-slate-300 rounded-lg p-4 text-center cursor-pointer">
+                    <span class="font-semibold text-slate-700">Method 2</span>
+                    <span class="block text-xs text-slate-500">Use CPI</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Step 1: Data Input -->
+        <div class="step-card p-6 rounded-lg">
+             <h2 class="text-xl font-bold text-slate-700">Step 1: Gather Your Data</h2>
+             <p class="text-slate-600 mt-1 mb-6">Enter your project's current values. The example values are pre-filled.</p>
+             <div class="grid grid-cols-2 gap-4">
+                 <div>
+                     <label for="bac" class="block text-sm font-medium text-slate-700">Budget at Completion (BAC)</label>
+                     <input type="number" id="bac" value="159000" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" oninput="calculateEVM()">
+                 </div>
+                 <div>
+                    <label for="pv" class="block text-sm font-medium text-slate-700">Planned Value (PV)</label>
+                    <input type="number" id="pv" value="60000" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" oninput="calculateEVM()">
+                </div>
+                 <div>
+                     <label for="ac" class="block text-sm font-medium text-slate-700">Actual Cost (AC)</label>
+                     <input type="number" id="ac" value="61000" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" oninput="calculateEVM()">
+                 </div>
+                 <div>
+                     <label for="ev" class="block text-sm font-medium text-slate-700">Earned Value (EV)</label>
+                     <input type="number" id="ev" value="55000" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" oninput="calculateEVM()">
+                 </div>
+             </div>
+        </div>
+
+        <!-- Steps 2, 3, & 4: Results -->
+        <div class="space-y-6">
+            <!-- Step 2 -->
+            <div class="flex items-start">
+                <div class="flex-shrink-0 bg-blue-500 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm">2</div>
+                <div class="ml-4">
+                    <h3 id="step2-title" class="text-lg font-semibold text-slate-700"></h3>
+                    <p id="step2-description" class="text-slate-500 text-sm mt-1"></p>
+                    <p id="step2-formula" class="font-mono text-xs text-slate-400 mt-2"></p>
+                </div>
+                <div id="step2-value" class="ml-auto text-2xl font-bold text-slate-800 text-right"></div>
+            </div>
+
+            <hr class="border-slate-200">
+
+            <!-- Step 3 -->
+            <div class="flex items-start">
+                <div class="flex-shrink-0 bg-blue-500 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm">3</div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-slate-700">Estimate at Completion (EAC)</h3>
+                    <p id="step3-description" class="text-slate-500 text-sm mt-1"></p>
+                     <p id="step3-formula" class="font-mono text-xs text-slate-400 mt-2"></p>
+                </div>
+                <div id="eac" class="ml-auto text-2xl font-bold text-slate-800 text-right"></div>
+            </div>
+            
+            <hr class="border-slate-200">
+
+            <!-- Step 4 -->
+            <div class="flex items-start">
+                 <div class="flex-shrink-0 bg-blue-500 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-sm">4</div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-slate-700">Variance at Completion (VAC)</h3>
+                    <p class="text-slate-500 text-sm mt-1">Shows the projected cost variance (over/under budget) at the end of the project.</p>
+                     <p class="font-mono text-xs text-slate-400 mt-2">FORMULA: BAC - EAC</p>
+                </div>
+                <div id="vac" class="result-value ml-auto text-2xl font-bold text-right"></div>
+            </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div id="chart-container" class="space-y-4 pt-8 border-t border-slate-200 mt-8">
+            <h2 class="text-xl font-bold text-slate-700 text-center">Current Performance Dashboard</h2>
+            <!-- Bar charts for EV, AC, PV -->
+            <div class="space-y-3">
+                <!-- PV -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-sm font-medium text-slate-600">Planned Value (PV)</span>
+                        <span id="pv-value" class="text-sm font-bold text-slate-800"></span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
+                        <div id="pv-bar" class="bg-blue-500 h-4 rounded-full transition-all duration-500" style="width: 0%;"></div>
+                    </div>
+                </div>
+                <!-- EV -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-sm font-medium text-slate-600">Earned Value (EV)</span>
+                        <span id="ev-value" class="text-sm font-bold text-slate-800"></span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
+                        <div id="ev-bar" class="bg-green-500 h-4 rounded-full transition-all duration-500" style="width: 0%;"></div>
+                    </div>
+                </div>
+                <!-- AC -->
+                <div>
+                     <div class="flex justify-between items-center mb-1">
+                        <span class="text-sm font-medium text-slate-600">Actual Cost (AC)</span>
+                        <span id="ac-value" class="text-sm font-bold text-slate-800"></span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
+                        <div id="ac-bar" class="bg-violet-500 h-4 rounded-full transition-all duration-500" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Index metrics SV, CV, SPI, CPI -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
+                <div class="text-center bg-slate-50 p-3 rounded-lg">
+                    <p class="text-sm text-slate-500">Schedule Variance (SV)</p>
+                    <p id="sv-metric" class="text-2xl font-bold"></p>
+                </div>
+                <div class="text-center bg-slate-50 p-3 rounded-lg">
+                     <p class="text-sm text-slate-500">Cost Variance (CV)</p>
+                    <p id="cv-metric" class="text-2xl font-bold"></p>
+                </div>
+                <div class="text-center bg-slate-50 p-3 rounded-lg">
+                     <p class="text-sm text-slate-500">Schedule Perf. Index (SPI)</p>
+                    <p id="spi-metric" class="text-2xl font-bold"></p>
+                </div>
+                <div class="text-center bg-slate-50 p-3 rounded-lg">
+                    <p class="text-sm text-slate-500">Cost Perf. Index (CPI)</p>
+                    <p id="cpi-metric" class="text-2xl font-bold"></p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function calculateEVM() {
+            // Get selected method
+            const selectedMethod = document.querySelector('input[name="method"]:checked').value;
+
+            // Get values from input fields
+            const bac = parseFloat(document.getElementById('bac').value) || 0;
+            const ac = parseFloat(document.getElementById('ac').value) || 0;
+            const ev = parseFloat(document.getElementById('ev').value) || 0;
+            const pv = parseFloat(document.getElementById('pv').value) || 0;
+
+            // Declare variables for calculation results
+            let eac, vac;
+            let step2Title, step2Desc, step2Formula, step2Value, step2IsCurrency;
+            let step3Desc, step3Formula;
+            
+            if (selectedMethod === 'method1') {
+                document.getElementById('method-subtitle').textContent = 'Method 1: Trusting the Original Plan';
+                
+                // Calculations
+                const remainingWork = bac - ev;
+                eac = ac + remainingWork;
+                vac = bac - eac;
+                
+                // UI Text
+                step2Title = 'Budget for Remaining Work';
+                step2Desc = 'Calculates the value of work left to do based on the original plan.';
+                step2Formula = 'FORMULA: BAC - EV';
+                step2Value = remainingWork;
+                step2IsCurrency = true;
+
+                step3Desc = 'Forecasts the new total project cost by combining actuals and remaining work.';
+                step3Formula = 'FORMULA: AC + (BAC - EV)';
+
+            } else { // Method 2
+                document.getElementById('method-subtitle').textContent = 'Method 2: Using Past Performance (CPI)';
+
+                // Calculations
+                const cpi = ac > 0 ? ev / ac : 0;
+                eac = cpi > 0 ? bac / cpi : 0;
+                vac = bac - eac;
+
+                // UI Text
+                step2Title = 'Cost Performance Index (CPI)';
+                step2Desc = 'Measures cost efficiency. < 1 is over budget, > 1 is under budget.';
+                step2Formula = 'FORMULA: EV / AC';
+                step2Value = cpi;
+                step2IsCurrency = false;
+
+                step3Desc = 'Forecasts the new total cost assuming the current cost efficiency continues.';
+                step3Formula = 'FORMULA: BAC / CPI';
+            }
+
+            // Helper function to format as currency
+            const formatCurrency = (value) => {
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(value);
+            };
+
+            // Update UI Elements for forecast methods
+            document.getElementById('step2-title').textContent = step2Title;
+            document.getElementById('step2-description').innerHTML = step2Desc;
+            document.getElementById('step2-formula').textContent = step2Formula;
+            document.getElementById('step2-value').textContent = step2IsCurrency ? formatCurrency(step2Value) : step2Value.toFixed(3);
+
+            document.getElementById('step3-description').textContent = step3Desc;
+            document.getElementById('step3-formula').textContent = step3Formula;
+            
+            document.getElementById('eac').textContent = formatCurrency(eac);
+            document.getElementById('vac').textContent = formatCurrency(vac);
+            
+            // Add color coding for the VAC result
+            const vacElement = document.getElementById('vac');
+            vacElement.classList.remove('text-red-500', 'text-green-500', 'text-slate-800');
+            
+            if (vac < 0) {
+                vacElement.classList.add('text-red-500'); // Red for over budget
+            } else if (vac > 0) {
+                vacElement.classList.add('text-green-500'); // Green for under budget
+            } else {
+                 vacElement.classList.add('text-slate-800');
+            }
+
+            // --- Performance Dashboard Calculations & UI Update ---
+            const cv = ev - ac;
+            const sv = ev - pv;
+            const cpi = ac > 0 ? ev / ac : 0;
+            const spi = pv > 0 ? ev / pv : 0;
+
+            // Update bar chart values
+            document.getElementById('pv-value').textContent = formatCurrency(pv);
+            document.getElementById('ev-value').textContent = formatCurrency(ev);
+            document.getElementById('ac-value').textContent = formatCurrency(ac);
+
+            // Update bar chart widths
+            const maxVal = Math.max(pv, ev, ac, 1); // Use max of the 3 for scaling, 1 to avoid division by zero
+            document.getElementById('pv-bar').style.width = `${(pv / maxVal) * 100}%`;
+            document.getElementById('ev-bar').style.width = `${(ev / maxVal) * 100}%`;
+            document.getElementById('ac-bar').style.width = `${(ac / maxVal) * 100}%`;
+
+            // Update metric boxes
+            document.getElementById('sv-metric').textContent = formatCurrency(sv);
+            document.getElementById('cv-metric').textContent = formatCurrency(cv);
+            document.getElementById('spi-metric').textContent = spi.toFixed(3);
+            document.getElementById('cpi-metric').textContent = cpi.toFixed(3);
+            
+            // Helper to apply color to metric boxes
+            const applyMetricColor = (elementId, value, isIndex = false) => {
+                const el = document.getElementById(elementId);
+                el.classList.remove('text-red-500', 'text-green-500', 'text-slate-800');
+                const threshold = isIndex ? 1.0 : 0;
+                if (value < threshold) {
+                    el.classList.add('text-red-500');
+                } else if (value > threshold) {
+                    el.classList.add('text-green-500');
+                } else {
+                    el.classList.add('text-slate-800');
+                }
+            };
+            
+            applyMetricColor('sv-metric', sv);
+            applyMetricColor('cv-metric', cv);
+            applyMetricColor('spi-metric', spi, true);
+            applyMetricColor('cpi-metric', cpi, true);
+        }
+
+        // Run calculation on page load
+        document.addEventListener('DOMContentLoaded', calculateEVM);
+    </script>
+
+</body>
+</html>
+
+
+
